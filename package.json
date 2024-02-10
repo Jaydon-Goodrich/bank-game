@@ -1,0 +1,37 @@
+{
+  "name": "bank-game",
+  "private": true,
+  "description": "🎈 PartyKit ⤫ Remix 💿",
+  "sideEffects": false,
+  "type": "module",
+  "scripts": {
+    "build": "rimraf build && rimraf public/build && remix build",
+    "check": "tsc --noEmit",
+    "deploy": "npm run build && partykit deploy",
+    "dev": "remix dev --manual -c \"npm start\"",
+    "start": "partykit dev"
+  },
+  "dependencies": {
+    "@remix-run/css-bundle": "^2.6.0",
+    "@remix-run/react": "^2.6.0",
+    "isbot": "^4.4.0",
+    "partymix": "^0.0.13",
+    "partysocket": "0.0.25",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@remix-run/dev": "^2.6.0",
+    "@remix-run/eslint-config": "^2.6.0",
+    "@types/react": "^18.2.55",
+    "@types/react-dom": "^18.2.18",
+    "concurrently": "^8.2.2",
+    "eslint": "^8.56.0",
+    "partykit": "^0.0.84",
+    "rimraf": "^5.0.5",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.17.1"
+  }
+}
