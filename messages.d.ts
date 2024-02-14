@@ -4,4 +4,6 @@
 export type State = {
   total: number;
   from: Record<string, number>;
+  bankTotal: number;
+  players: number[];
 };
