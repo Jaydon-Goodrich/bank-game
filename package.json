@@ -12,6 +12,7 @@
     "start": "partykit dev"
   },
   "dependencies": {
+    "@radix-ui/react-select": "^2.0.0",
     "@radix-ui/react-slot": "^1.0.2",
     "@remix-run/css-bundle": "^2.6.0",
     "@remix-run/react": "^2.6.0",

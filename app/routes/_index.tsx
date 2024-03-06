@@ -3,8 +3,8 @@ import type {
   LoaderFunctionArgs,
   MetaFunction,
 } from "partymix";
-import { Link } from "@remix-run/react"
-// import { Button } from "@/components/ui/button"
+// import { Link } from "@remix-run/react"
+import { Button } from "~/components/ui/button"
 // import Game from "../components/game";
 // import NameForm from "../components/nameForm";
 // import { useState } from "react";
@@ -41,8 +41,8 @@ export default function Index() {
           <img src="/dice.svg" alt="A six sided die" width={50} style={{transform: 'rotate(90deg)'}}/>
         </div>
         <div style={{padding: '25px 0px', display: 'flex', justifyContent: 'center', flexDirection: 'column', alignItems: 'center', gap: '25px'}}>
-          <Link to="/join">JOIN GAME</Link>
-          <Link to="/host">HOST GAME</Link>
+          <Button>JOIN GAME</Button>
+          <Button>HOST GAME</Button>
         </div>
       </div>
       {/* {hasName ? <Game/> : <NameForm setHasName={setHasName}/>} */}

@@ -1,6 +1,16 @@
-import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useNavigate } from "@remix-run/react";
+
+import {
+	Select,
+	SelectContent,
+	SelectGroup,
+	SelectItem,
+	SelectLabel,
+	SelectTrigger,
+	SelectValue,
+  } from "~/components/ui/select"
+  import { Button } from "~/components/ui/button"
 
 export default function Host() {
 	const navigate = useNavigate();
@@ -21,22 +31,32 @@ export default function Host() {
 		<div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.8", minHeight: '100vh', minWidth: '100vw', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
 			<div style={{width: '30%', border: '1px solid black', borderRadius: '5px'}}>
 				<h1 style={{textAlign: 'center', padding: '25px 0px'}}>HOST GAME</h1>
-				<div style={{padding: '25px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: 'red'}}>
-					<div>
-						<label htmlFor="gameMode">Game Mode:</label>
-						<select id="gameMode" name="gameMode" onChange={(e) => setGameMode(e.target.value)}>
-							<option value="Standard">Standard</option>
-							<option value="Hidden">Hidden</option>
-						</select>
-					</div>
-					<div>
-						<label htmlFor="rounds">Rounds:</label>
-						<select id="rounds" name="rounds" onChange={(e) => setRounds(e.target.value)}>
-							<option value="10">10</option>
-							<option value="15">15</option>
-							<option value="20">20</option>
-						</select>
-					</div>
+				<div style={{padding: '25px 0', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+					<Select>
+						<SelectTrigger className="w-[180px]">
+							<SelectValue placeholder="Game Mode:" />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectGroup>
+								<SelectLabel>Game Mode:</SelectLabel>
+								<SelectItem value="Standard">Standard</SelectItem>
+								<SelectItem value="Hidden">Hidden</SelectItem>
+							</SelectGroup>
+						</SelectContent>
+					</Select>
+					<Select>
+						<SelectTrigger className="w-[180px]">
+							<SelectValue placeholder="Rounds:" />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectGroup>
+								<SelectLabel>Rounds:</SelectLabel>
+								<SelectItem value="10">10</SelectItem>
+								<SelectItem value="15">15</SelectItem>
+								<SelectItem value="20">20</SelectItem>
+							</SelectGroup>
+						</SelectContent>
+					</Select>
 					<Button onClick={() => CreateGame(gameMode, rounds)}>Start Game</Button>
 				</div>
 			</div>
