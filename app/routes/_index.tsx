@@ -3,8 +3,7 @@ import type {
   LoaderFunctionArgs,
   MetaFunction,
 } from "partymix";
-// import { Link } from "@remix-run/react"
-import { useNavigate } from "@remix-run/react";
+import { Link } from "@remix-run/react";
 
 import { Button } from "~/components/ui/button";
 // import Game from "../components/game";
@@ -32,8 +31,6 @@ export const loader: LoaderFunction = async function ({
 };
 
 export default function Index() {
-  const navigate = useNavigate();
-
   // const [hasName, setHasName] = useState<boolean>(false);
   return (
     <div
@@ -81,20 +78,16 @@ export default function Index() {
             gap: "25px",
           }}
         >
-          <Button
-            onClick={() => {
-              navigate("/join");
-            }}
-          >
-            JOIN GAME
-          </Button>
-          <Button
-            onClick={() => {
-              navigate("/host");
-            }}
-          >
-            HOST GAME
-          </Button>
+          <Link to={'/join'}>
+            <Button>
+              JOIN GAME
+            </Button>
+          </Link>
+          <Link to={'/host'}>
+            <Button>
+              HOST GAME
+            </Button>
+          </Link>
         </div>
       </div>
       {/* {hasName ? <Game/> : <NameForm setHasName={setHasName}/>} */}

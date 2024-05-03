@@ -1,4 +1,4 @@
-import type { LinksFunction } from "partymix";
+import type { LinksFunction } from "@remix-run/node";
 import { cssBundleHref } from "@remix-run/css-bundle";
 import {
   Links,
