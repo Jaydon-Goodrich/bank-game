@@ -1,62 +1,64 @@
 import usePartySocket from "partysocket/react";
-import { useParams, useSearchParams } from "@remix-run/react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useLoaderData } from "@remix-run/react";
+import Game from '../components/game';
+import type {
+  LoaderFunction,
+  LoaderFunctionArgs,
+} from "partymix";
+
+export const loader: LoaderFunction = async function ({
+  context,
+  params
+}: LoaderFunctionArgs) {
+  const res = await context.lobby.parties.main.get(`${params.id}`).fetch();
+  const data = await res.json();
+
+  return {data, roomId: params.id, baseUrl: context.lobby.env.BASE_URL};
+};
 
 export default function RoomParam() {
-  let params = useParams();
-  const roomId = params.id;
-  const [searchParams] = useSearchParams();
-  const username = searchParams.get("username");
-  const [message, setMessage] = useState<string>("");
-  const [players, setPlayers] = useState<string[]>([]);
-  const [clicked, setClicked] = useState<number>(0);
-
-  async function getData(roomId: string | undefined) {
-    const req = await fetch(`http://localhost:1999/parties/main/${roomId}`, {
-      method: "GET",
-    });
-    const data = await req.json();
-    setPlayers(data.players);
-    if (!req.ok) {
-      if (req.status === 404) {
-        console.log("NOT FOUND");
-      } else {
-        throw new Error("Something went wrong.");
-      }
-    }
-  }
+  const {data, roomId, baseUrl} = useLoaderData<typeof loader>();
+  console.log('DATA', data);
+  const [gameState, setGameState] = useState(data.gameState);
+  
+  // const [message, setMessage] = useState<string>("");
+  // const [players, setPlayers] = useState<string[]>([]);
+  // const [clicked, setClicked] = useState<number>(0);
 
   const socket = usePartySocket({
-    host: "http://localhost:1999",
+    host: baseUrl,
     room: roomId,
     onMessage(event) {
+      
       const roomData = JSON.parse(event.data);
-      setPlayers(roomData.players);
-      setClicked(roomData.clicked);
+      console.log('BEING BROADCASTED', roomData.gameState)
+      setGameState({...roomData.gameState});
     },
   });
 
-  const sendClick = () => {
-    socket.send(JSON.stringify({ clicked: clicked + 1 }));
-  };
+  // const sendClick = () => {
+  //   socket.send(JSON.stringify({ clicked: clicked + 1 }));
+  //   console.log('CLICKED')
+  // };
 
-  const sendPing = () => {
-    try {
-      const pingMessage = JSON.stringify({ type: "ping", username });
-      socket.send(pingMessage);
-    } catch (err) {
-      console.log("ERR", err);
-    }
-  };
+  // const sendPing = () => {
+  //   try {
+  //     const pingMessage = JSON.stringify({ type: "ping", username });
+  //     socket.send(pingMessage);
+  //   } catch (err) {
+  //     console.log("ERR", err);
+  //   }
+  // };
 
-  useEffect(() => {
-    getData(roomId);
-    const pingInterval = setInterval(sendPing, 5000);
+  // useEffect(() => {
+  //   getData(roomId);
+  //   // const pingInterval = setInterval(sendPing, 5000);
 
-    return () => {
-      clearInterval(pingInterval);
-    };
-  }, [socket]);
+  //   // return () => {
+  //   //   clearInterval(pingInterval);
+  //   // };
+  // }, [socket]);
 
   return (
     <div
@@ -68,22 +70,11 @@ export default function RoomParam() {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        justifyContent: "center",
+        justifyContent: "start",
       }}
     >
-      <h1>Room ID: {params.id}</h1>
-      <h2>Times Clicked: {clicked}</h2>
-      <input
-        type="text"
-        onChange={(evt) => setMessage(evt.target.value)}
-        placeholder="here"
-      />
-      <button onClick={() => sendClick()}>DO SOMETHING</button>
-      {/* <h1>BACK:{lastMessage}</h1> */}
-      <h1>PLAYERS</h1>
-      {players.map((player, index) => (
-        <h3 key={player + index}>{player}</h3>
-      ))}
+      <h1 className="font-bold text-xl py-8">Room ID: {roomId}</h1>
+      <Game socket={socket} data={data} gameState={gameState}/>
     </div>
   );
 }

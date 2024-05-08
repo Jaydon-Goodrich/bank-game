@@ -44,8 +44,11 @@ type GameState = {
   rounds: "10" | "15" | "20";
   diceType: "Physical" | "Digital";
   players: Player[];
+  bankedPlayers: Player[];
+  activePlayers: Player[];
   round: number;
   roundScore: number;
+  roll: number;
 };
 
 // This "main" party server simply handles all regular http requests
@@ -56,9 +59,12 @@ export default class MyRemix implements Party.Server {
     gameMode: "Standard",
     rounds: "10",
     diceType: "Physical",
-    players: [],
+    players: [{username: 'test', score: 0}, {username: 'test2', score: 0}, {username: 'test3', score: 0}],
+    bankedPlayers: [],
+    activePlayers: [],
     round: 1,
     roundScore: 0,
+    roll: 0
   };
   message: string | undefined;
   players: string[] = [];
@@ -74,6 +80,7 @@ export default class MyRemix implements Party.Server {
   }
 
   async onRequest(req: Party.Request) {
+    console.log('REQUEST COMING IN', req.method)
     if (req.method === "POST") {
       const data: GameConfig | NewPlayer = await req.json();
       this.players.push(data.username);
@@ -86,7 +93,7 @@ export default class MyRemix implements Party.Server {
     }
 
     if (req.method === "GET") {
-      return new Response(JSON.stringify({ players: this.players }), {
+      return new Response(JSON.stringify({ players: this.players, gameState: this.gameState }), {
         status: 200,
         headers: { "Content-Type": "application/json" },
       });
@@ -96,34 +103,59 @@ export default class MyRemix implements Party.Server {
   }
 
   isOlderThan40Seconds(timestamp: number) {
-    const fortySecondsAgo = Date.now() - 10 * 1000; // 40 seconds * 1000 ms/s
+    const fortySecondsAgo = Date.now() - 100 * 1000;
     return timestamp < fortySecondsAgo;
   }
 
   async onMessage(message: string) {
     const event = JSON.parse(message);
     if (event.type === "ping") {
-      this.lastPings.find(
-        (ping) => ping.username === event.username
-      )!.lastPing = Date.now();
-      const oldPing = this.lastPings.find((ping) =>
-        this.isOlderThan40Seconds(ping.lastPing)
-      );
-      if (oldPing) {
-        this.oldPlayersStorage = [oldPing.username, ...this.oldPlayersStorage];
-        this.players = this.players.filter(
-          (player) => player !== oldPing.username
-        );
-        this.lastPings = this.lastPings.filter(
-          (ping) => ping.username !== oldPing.username
-        );
-        this.room.broadcast(JSON.stringify({ players: this.players }));
+      // this.lastPings.find(
+      //   (ping) => ping.username === event.username
+      // )!.lastPing = Date.now();
+      // const oldPing = this.lastPings.find((ping) =>
+      //   this.isOlderThan40Seconds(ping.lastPing)
+      // );
+      // if (oldPing) {
+      //   this.oldPlayersStorage = [oldPing.username, ...this.oldPlayersStorage];
+      //   this.players = this.players.filter(
+      //     (player) => player !== oldPing.username
+      //   );
+      //   this.lastPings = this.lastPings.filter(
+      //     (ping) => ping.username !== oldPing.username
+      //   );
+      //   this.room.broadcast(JSON.stringify({ players: this.players }));
+      // }
+    }
+
+    if(event.type === 'bankPlayers') {
+      event.players.forEach((player: {username: string, score: number}) => {
+        const p = this.gameState.players.find(p => p.username === player.username)!;
+        p.score = this.gameState.roundScore;
+        const index = this.gameState.players.indexOf(p);
+        this.gameState.bankedPlayers.push(p);
+        this.gameState.players.splice(index, 1);
+      });
+      this.room.broadcast(JSON.stringify({ gameState: this.gameState }));
+    }
+
+    if(event.type === 'addScore') {
+      const roll = parseInt(event.num);
+      if(this.gameState.roll < 3 && roll === 7) {
+        this.gameState.roundScore += 70;
+      }else if(this.gameState.roll >= 3 && roll === 0) {
+        this.gameState.roundScore += this.gameState.roundScore;
+      }else if(this.gameState.roll >= 3 && roll === 7) {
+        this.gameState.roundScore = 0;
+        this.gameState.roll = 0;
+        this.gameState.round++;
+        this.room.broadcast(JSON.stringify({ gameState: this.gameState }));
+        return;
+      }else {
+        this.gameState.roundScore += roll;
       }
-    } else {
-      this.message = event.message;
-      this.room.broadcast(
-        JSON.stringify({ clicked: event.clicked, players: this.players })
-      );
+      this.gameState.roll++;
+      this.room.broadcast(JSON.stringify({ gameState: this.gameState }));
     }
   }
 }

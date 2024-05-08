@@ -1,4 +1,3 @@
-// import usePartySocket from "partysocket/react";
 import { useState } from "react";
 // import type { State } from "../../messages.d";
 import { Button } from "~/components/ui/button";
@@ -12,9 +11,10 @@ import {
 } from "~/components/ui/drawer";
 import { Checkbox } from "~/components/ui/checkbox";
 
-export default function Game() {
+export default function Game({data, socket, gameState}: any) {
   const [randomNumbers, setRandomNumbers] = useState<number[]>([1, 5]);
   const [totalRoll, setTotalRoll] = useState<number>(0);
+  
   const generateRandomNumbers = async () => {
     let randomNums: number[] = [];
     for (let i = 0; i < 5; i++) {
@@ -25,38 +25,55 @@ export default function Game() {
     }
     setTotalRoll(randomNums[0] + randomNums[1]);
   };
+
+  const addScore = (num: string) => {
+    if (num === 'Doubles') {
+      num = '0';
+    }
+    socket.send(JSON.stringify({type: 'addScore', num}))
+  };
+
+  const bankPlayers = () => {
+    const players = data.gameState.players.filter((player: {username: string, score: number}) => {
+      return document.getElementById(player.username)?.getAttribute('aria-checked') === 'true';
+    });
+
+    console.log('players', players)
+    socket.send(JSON.stringify({type: 'bankPlayers', players}));
+  }
+
   return (
-    <div className="flex justify-center flex-col w-[50%]">
+    <div className="flex justify-center flex-col w-[80%]">
       <div className="flex justify-center items-center flex-col pb-10">
-        <div className="flex justify-between w-[50%]">
-          <span>Player 1</span>
-          <span>0</span>
-        </div>
-        <div className="flex justify-between w-[50%]">
-          <span>Player 2</span>
-          <span>0</span>
-        </div>
+        {data.gameState.players.map((player: {username: string, score: number}) => {
+          return (
+            <div key={player.username} className="flex justify-between w-[50%]">
+              <span>{player.username}</span>
+              <span>{player.score}</span>
+            </div>
+          );
+        })}
       </div>
       <div className="flex flex-col">
         <span>Round</span>
-        <span>1/20</span>
+        <span>{`${gameState.round}/${gameState.rounds}`}</span>
       </div>
       <div className="flex justify-center items-center flex-col py-5">
-        <span className="text-2xl">0</span>
+        <span className="text-2xl">{gameState.roundScore}</span>
         <span>Round Total</span>
       </div>
       <div className="flex flex-col">
         <span>Roll</span>
-        <span>0</span>
+        <span>{gameState.roll}</span>
       </div>
-      {1 == 1 ? (
+      {data.gameState.gameMode === 'Standard' ? (
         <div className="flex w-[100%] justify-evenly">
           <Drawer>
             <DrawerTrigger asChild>
               <Button>Roll</Button>
             </DrawerTrigger>
             <DrawerContent>
-              {1 !== 1 ? (
+              {data.gameState.diceType === 'Physical' ? (
                 <>
                   <DrawerHeader>
                     <DrawerTitle className="text-center">
@@ -79,7 +96,7 @@ export default function Game() {
                       "Doubles",
                     ].map((num: string) => {
                       return (
-                        <Button key={num} className="w-[25%]">
+                        <Button disabled={num === 'Doubles' && gameState.roll < 3} key={num} className="w-[25%]" onClick={() => addScore(num)}>
                           {num}
                         </Button>
                       );
@@ -137,29 +154,23 @@ export default function Game() {
                 <DrawerTitle>Bank Score?</DrawerTitle>
               </DrawerHeader>
               <DrawerFooter>
-                <div className="items-top flex space-x-2">
-                  <Checkbox id="terms1" />
-                  <div className="grid gap-1.5 leading-none">
-                    <label
-                      htmlFor="terms1"
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                    >
-                      Player 1
-                    </label>
-                  </div>
-                </div>
-                <div className="items-top flex space-x-2">
-                  <Checkbox id="terms2" />
-                  <div className="grid gap-1.5 leading-none">
-                    <label
-                      htmlFor="terms2"
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                    >
-                      Player 2
-                    </label>
-                  </div>
-                </div>
-                <Button>Done</Button>
+                {data.gameState.players.map((player: {username: string, score: number}) => {
+                  return (
+                    <div key={player.username + player.score} className="items-top flex space-x-2">
+                      <Checkbox id={player.username} />
+                      <div className="grid gap-1.5 leading-none">
+                        <label
+                          htmlFor={player.username}
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          {player.username}
+                        </label>
+                      </div>
+                    </div>
+                  );
+                }
+                )}
+                <Button onClick={() => bankPlayers()}>Done</Button>
               </DrawerFooter>
             </DrawerContent>
           </Drawer>

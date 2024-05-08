@@ -1,21 +1,12 @@
-import { useState } from "react";
 import { Form, useActionData } from "@remix-run/react";
 import type {ActionFunctionArgs} from "@remix-run/node";
 import {json, redirect} from "partymix";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/ui/select";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 
 export const action = async ({
   request,
+  context
 }: ActionFunctionArgs) => {
   const formData = await request.formData();
   const username = formData.get("username");
@@ -36,40 +27,28 @@ export const action = async ({
     return json(errors);
   }
 
-  return redirect("/room");
+  const randomRoomId = Math.random().toString(36).substring(2);
+
+  const gameConfig = {
+    newPlayer: false,
+    gameMode,
+    rounds,
+    diceMode,
+    username,
+  };
+  await fetch(`${context.lobby.env.BASE_URL}/parties/main/${randomRoomId}`, {
+    method: "POST",
+    body: JSON.stringify(gameConfig),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  return redirect(`/room/${randomRoomId}`);
 };
 
 export default function Host() {
   const errors = useActionData<typeof action>();
-
-  // const [gameMode, setGameMode] = useState<string>("Standard");
-  // const [rounds, setRounds] = useState<string>("10");
-  // const [username, setUsername] = useState<string>("");
-  // const [diceMode, setDiceMode] = useState<string>("");
-
-  // const createGame = async () => {
-  //   const randomRoomId = Math.random().toString(36).substring(7);
-  //   const params = new URLSearchParams();
-  //   params.append("gameMode", gameMode.toString());
-  //   params.append("rounds", rounds.toString());
-  //   params.append("diceMode", diceMode.toString());
-  //   params.append("username", username.toString());
-  //   const gameConfig = {
-  //     newPlayer: false,
-  //     gameMode,
-  //     rounds,
-  //     diceMode,
-  //     username,
-  //   };
-  //   await fetch(`http://localhost:1999/parties/main/${randomRoomId}`, {
-  //     method: "POST",
-  //     body: JSON.stringify(gameConfig),
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //     },
-  //   });
-  //   navigate(`/room/${randomRoomId}?${params}`);
-  // };
 
   return (
     <Form method="post">
@@ -137,7 +116,7 @@ export default function Host() {
             <option value="15">15</option>
             <option value="20">20</option>
           </select>
-          <Button type="submit">Start Game</Button>
+          <Button type="submit" className="mt-2">Start Game</Button>
         </div>
       </div>
     </div>
